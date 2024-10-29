@@ -47,6 +47,13 @@
         </form>
     </div>
 
+    {% if request.GET.q %}
+    <h3 class="mt-4">Результаты поиска по запросу {{ request.GET.q }}</h3>
+    {% if not goods %}
+    <link rel="stylesheet" href="{% static "deps/css/my_footer_css.css" %}">
+        <h2 class="mt-4"> По запросу ничего не найдено</h2>
+    {% endif %}    
+{% endif %}
     {% for product in goods  %}
         <!-- Карта товара -->
     <div class="col-lg-4 col-md-6 p-4">
@@ -58,9 +65,25 @@
             {% endif %}
             <div class="card-body">
                 <a href="{% url "catalog:product" product.slug %}">
-                    <p class="card-title">{{ product.name }}</p>
+                    <p class="card-title">
+                        {% autoescape off %}
+                         {% if product.headline %}
+                         {{product.headline}} 
+                         {% else %}
+                         {{ product.name }}
+                         {% endif %}
+                        {% endautoescape %}
+                    </p>
                 </a>
-                <p class="card-text text-truncate">{{ product.description|truncatechars:35 }}</p>
+                <p class="card-text">
+                    {% autoescape off %}
+                        {% if product.bodyline %}
+                        {{product.bodyline|truncatechars:100}} 
+                        {% else %}
+                        {{ product.description|truncatechars:35 }}
+                        {% endif %}
+                   {% endautoescape %}
+                   </p>
                 <p class="product_id">id: {{ product.display_id }}</p>
                 <div class="d-flex justify-content-between">
 
@@ -90,7 +113,11 @@
 
 </div>
 <!-- Пагинация -->
-<nav aria-label="Page navigation example">
+ {% if not goods %}
+     <nav aria-label="Page navigation example"> 
+    </nav>
+ {% endif %}
+ {% endblock %}
     <ul class="pagination justify-content-center my-4">
         <div class="custom-shadow d-flex">
             <li class="page-item  {% if not goods.has_previous %}disabled{% endif %}">
@@ -115,7 +142,6 @@
     </ul>
 </nav>
 
-{% endblock %}
 
 {% block footer %}
 <footer class="py-4 bg-dark">
