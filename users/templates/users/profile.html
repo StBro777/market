@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load cache %}
-{% comment %} {% load carts_tags %} {% endcomment %}
+{% load carts_tags %} 
 
 {% block content %}
 <div class="row">
@@ -81,7 +81,7 @@
                 </div>
             </div>
             <!-- Корзина -->
-            {% comment %} {% user_carts request as carts %} {% endcomment %}
+            {% user_carts request as carts %} 
 
             <div class="col-md-7">
                 <div class=" bg-white p-4 mb-4 mx-2 rounded custom-shadow">
