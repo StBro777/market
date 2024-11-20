@@ -1,11 +1,10 @@
-from email.mime import image
 from django import forms
 from django.contrib.auth.forms import (
     AuthenticationForm,
     UserCreationForm,
     UserChangeForm,
 )
-from django.forms import widgets
+
 
 from users.models import User
 
