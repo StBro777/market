@@ -2,7 +2,7 @@ from unicodedata import category
 from django.http import Http404
 from django.views.generic import DetailView, ListView
 
-from goods.models import Products
+from goods.models import Categories, Products
 from goods.utils import q_search
 
 
@@ -39,6 +39,7 @@ class CatalogView(ListView):
         context = super().get_context_data(**kwargs)
         context["title"] = "Home - Каталог"
         context["slug_url"] = self.kwargs.get("category_slug")
+        context["categories"] = Categories.objects.all()
         return context
 
 
