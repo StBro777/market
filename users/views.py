@@ -1,3 +1,4 @@
+from email import message
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.core.signals import request_started
@@ -5,10 +6,12 @@ from django.db.models import Prefetch
 from django.template import context
 from django.urls import reverse, reverse_lazy
 from django.contrib import auth, messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
-from django.views.generic import CreateView
+from django.views.generic import CreateView, TemplateView, UpdateView
 from carts.models import Cart
+from common.mixins import CacheMixin
 from orders.forms import CreateOrderForm
 from orders.models import Order, OrderItem
 
@@ -50,7 +53,7 @@ class UserLoginView(LoginView):
 
 
 class UserRegistrationView(CreateView):
-    template_name = "user/registration.html"
+    template_name = "users/registration.html"
     form_class = UserRegistrationForm
     success_url = reverse_lazy("users:profile")
 
@@ -74,61 +77,53 @@ class UserRegistrationView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Home - Регистрация"
+
         return context
 
 
-# def registration(request):
-#     if request.method == "POST":
-#         form = UserRegistrationForm(data=request.POST)
-#         if form.is_valid():
-#             form.save()
+class UserProfileView(LoginRequiredMixin, CacheMixin, UpdateView):
+    template_name = "users/profile.html"
+    form_class = ProfileForm
+    success_url = reverse_lazy("users:profile")
 
-#             session_key = request.session.session_key
+    def get_object(self, queryset=None):
+        return self.request.user
 
-#             user = form.instance
-#             auth.login(request, user)
+    def form_valid(self, form):
+        messages.success(self.request, "Профайл успешно обновлен")
+        return super().form_valid(form)
 
-#             messages.success(
-#                 request,
-#                 f"{user.username}, Вы успешно зарегестрировались и вошли в аккаунт",
-#             )
-#             return HttpResponseRedirect(reverse("main:index"))
-#     else:
-#         form = UserRegistrationForm()
-#     context = {"title": "Home - Регистрация", "form": form}
-#     return render(request, "users/registration.html", context)
+    def form_invalid(self, form):
+        messages.error(self.request, "Произошла ошибка")
+        return super().form_invalid(form)
 
-
-@login_required
-def profile(request):
-    if request.method == "POST":
-        form = ProfileForm(
-            data=request.POST, instance=request.user, files=request.FILES
-        )
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Профайл успешно обновлен")
-            return HttpResponseRedirect(reverse("user:profile"))
-    else:
-        form = ProfileForm(instance=request.user)
-
-    orders = (
-        Order.objects.filter(user=request.user)
-        .prefetch_related(
-            Prefetch(
-                "orderitem_set",
-                queryset=OrderItem.objects.select_related("product"),
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Home - Кабинет"
+        orders = (
+            Order.objects.filter(user=self.request.user)
+            .prefetch_related(
+                Prefetch(
+                    "orderitem_set",
+                    queryset=OrderItem.objects.select_related("product"),
+                )
             )
+            .order_by("-id")
         )
-        .order_by("-id")
-    )
 
-    context = {"title": "Home - Кабинет", "form": form, "orders": orders}
-    return render(request, "users/profile.html", context)
+        context["orders"] = self.set_get_cache(
+            orders, f"user_{self.request.user.id}_orders", 60
+        )
+        return context
 
 
-def users_cart(request):
-    return render(request, "users/users_cart.html")
+class UserCartView(TemplateView):
+    template_name = "users/users_cart.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Home - Корзина"
+        return context
 
 
 @login_required

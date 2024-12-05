@@ -1,8 +1,7 @@
-from unicodedata import category
 from django.http import Http404
 from django.views.generic import DetailView, ListView
 
-from goods.models import Categories, Products
+from goods.models import Products
 from goods.utils import q_search
 
 
@@ -12,12 +11,14 @@ class CatalogView(ListView):
     context_object_name = "goods"
     paginate_by = 3
     allow_empty = False
+    slug_url_kwarg = "category_slug"
 
     def get_queryset(self):
-        category_slug = self.kwargs.get("category_slug")
+        category_slug = self.kwargs.get(self.slug_url_kwarg)
         on_sale = self.request.GET.get("on_sale")
         order_by = self.request.GET.get("order_by")
         query = self.request.GET.get("q")
+
         if category_slug == "all":
             goods = super().get_queryset()
         elif query:
@@ -38,8 +39,7 @@ class CatalogView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = "Home - Каталог"
-        context["slug_url"] = self.kwargs.get("category_slug")
-        context["categories"] = Categories.objects.all()
+        context["slug_url"] = self.kwargs.get(self.slug_url_kwarg)
         return context
 
 
