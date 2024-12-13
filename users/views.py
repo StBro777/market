@@ -7,6 +7,7 @@ from django.template import context
 from django.urls import reverse, reverse_lazy
 from django.contrib import auth, messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.views.generic import CreateView, TemplateView, UpdateView

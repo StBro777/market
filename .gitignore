@@ -2,6 +2,7 @@
 venv
 .pylintrc
 __pycach__/
+cache/
 
 #ide stuff
 .vscode
